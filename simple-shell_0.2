@@ -1,0 +1,24 @@
+#include <string.h>
+#include <stdio.h>
+
+/* Inside your loop, after reading the input into 'buffer' */
+char *argv[10]; /* Array to hold the command and its arguments */
+char *token;
+int i = 0;
+
+/* Use strtok to get the first token (the command) */
+token = strtok(buffer, " \n\t");
+
+/* Keep getting tokens until there are no more */
+while (token != NULL)
+{
+  argv[i] = token;
+  token = strtok(NULL, " \n\t");
+  i++;
+}
+
+/* Terminate the array with NULL as required by execve */
+argv[i] = NULL;
+
+/* Now 'argv[0]' is "ls", 'argv[1]' is "-l", and 'argv[2]' is NULL */
+

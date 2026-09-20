@@ -1,0 +1,33 @@
+#include <sys/stat.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+/* Helper to check if file exists */
+char *find_executable(char *command)
+{
+    char *path = getenv("PATH");
+    char *path_copy = strdup(path); /* Duplicate because strtok modifies it */
+    char *token;
+    char *full_path = malloc(1024); /* Ensure enough space */
+
+    token = strtok(path_copy, ":");
+    while (token != NULL)
+    {
+        /* Construct the full path: dir/command */
+        sprintf(full_path, "%s/%s", token, command);
+        
+        /* Check if file exists */
+        if (access(full_path, X_OK) == 0)
+        {
+            free(path_copy);
+            return (full_path);
+        }
+        token = strtok(NULL, ":");
+    }
+
+    free(path_copy);
+    free(full_path);
+    return (NULL);
+}
+

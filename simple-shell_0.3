@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+/**
+ * find_path - locates a command in the PATH
+ * @command: command to find
+ * Return: full path of command or NULL if not found
+ */
+char *find_path(char *command)
+{
+    char *path_env = getenv("PATH");
+    char *path_copy = strdup(path_env);
+    char *token;
+    char *full_path = malloc(1024); /* Buffer for construction */
+    struct stat st;
+
+    /* Tokenize PATH by ':' */
+    token = strtok(path_copy, ":");
+    while (token != NULL)
+    {
+        /* Build: directory + / + command */
+        sprintf(full_path, "%s/%s", token, command);
+
+        /* Check if file exists */
+        if (stat(full_path, &st) == 0)
+        {
+            free(path_copy);
+            return (full_path);
+        }
+        token = strtok(NULL, ":");
+    }
+
+    free(path_copy);
+    free(full_path);
+    return (NULL);
+}
+
+void execute_command(char **args)
+{
+    char *full_path;
+
+    /* 1. First, check if the command is already an absolute path (e.g., /bin/ls) */
+    if (access(args[0], X_OK) == 0)
+    {
+        /* Execute directly */
+    }
+    else
+    {
+        /* 2. If not an absolute path, try to find it in PATH */
+        full_path = find_path(args[0]);
+
+        if (full_path != NULL)
+        {
+            /* 3. Command exists, now it is safe to fork */
+            if (fork() == 0)
+            {
+                execve(full_path, args, NULL);
+            }
+            wait(NULL);
+            free(full_path);
+        }
+        else
+        {
+            /* Command not found, handle error */
+            printf("%s: command not found\n", args[0]);
+        }
+    }
+}
+
